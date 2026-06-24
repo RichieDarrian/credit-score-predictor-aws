@@ -20,14 +20,17 @@ REGION = os.environ.get("AWS_REGION", "us-east-1")
 
 LABEL_MAP = {0: "Poor", 1: "Standard", 2: "Good"}
 
-PAYMENT_BEHAVIOUR_OPTIONS = [
-    "High_spent_Small_value_payments",
-    "Low_spent_Large_value_payments",
-    "Low_spent_Medium_value_payments",
-    "Low_spent_Small_value_payments",
-    "High_spent_Medium_value_payments",
-    "High_spent_Large_value_payments",
-]
+PAYMENT_BEHAVIOUR_LABELS = {
+    "High_spent_Small_value_payments":  "High Spending - Small Transactions",
+    "Low_spent_Large_value_payments":   "Low Spending - Large Transactions",
+    "Low_spent_Medium_value_payments":  "Low Spending - Medium Transactions",
+    "Low_spent_Small_value_payments":   "Low Spending - Small Transactions",
+    "High_spent_Medium_value_payments": "High Spending - Medium Transactions",
+    "High_spent_Large_value_payments":  "High Spending - Large Transactions",
+    "Unknown": "Unknown",
+}
+
+PAYMENT_BEHAVIOUR_REVERSE = {v: k for k, v in PAYMENT_BEHAVIOUR_LABELS.items()}
 
 LOAN_COLS = [
     "Auto Loan",
@@ -158,7 +161,8 @@ with st.form("prediction_form"):
     with c3:
         outstanding_debt = st.number_input("Outstanding Debt ($)", min_value=0.0, max_value=5000.0, value=500.0, step=50.0)
     with c4:
-        changed_credit_limit = st.number_input("Changed Credit Limit ($)", min_value=-10.0, max_value=40.0, value=0.0, step=0.5)
+        # FIX 1: label changed from ($) to (%) to match local version
+        changed_credit_limit = st.number_input("Changed Credit Limit (%)", min_value=-10.0, max_value=40.0, value=0.0, step=0.5)
 
     c5, c6, c7, c8 = st.columns(4)
     with c5:
@@ -198,7 +202,13 @@ with st.form("prediction_form"):
     with c18:
         payment_of_min_amount = st.selectbox("Payment of Min Amount", options=["Yes", "No", "Unknown"])
     with c19:
-        payment_behaviour = st.selectbox("Payment Behaviour", options=PAYMENT_BEHAVIOUR_OPTIONS)
+        # FIX 2: human-readable labels + help tooltip, matching local version
+        payment_behaviour_label = st.selectbox(
+            "Payment Behaviour",
+            options=list(PAYMENT_BEHAVIOUR_LABELS.values()),
+            help="How the customer typically spend and what transaction sizes the customer make most often.",
+        )
+        payment_behaviour = PAYMENT_BEHAVIOUR_REVERSE[payment_behaviour_label]
 
     st.subheader("Active Loan Types")
     loan_types = st.multiselect(
